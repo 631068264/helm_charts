@@ -1,0 +1,30 @@
+mysqlslap -uroot -h 10.19.64.201 -P 30008 -pwuyuxi08 --concurrency=50,100,1000 --number-of-queries 10000  --iterations=5 --engine=innodb --auto-generate-sql-load-type=write,update --auto-generate-sql-add-autoincrement  -a
+
+write,update
+--concurrency=50,100 --number-of-queries 1000
+cpu: 500m
+memory: 1Gi
+Benchmark
+	Running for engine innodb
+	Average number of seconds to run all queries: 1.871 seconds
+	Minimum number of seconds to run all queries: 1.735 seconds
+	Maximum number of seconds to run all queries: 2.100 seconds
+	Number of clients running queries: 50
+	Average number of queries per client: 20
+
+Benchmark
+	Running for engine innodb
+	Average number of seconds to run all queries: 2.173 seconds
+	Minimum number of seconds to run all queries: 2.032 seconds
+	Maximum number of seconds to run all queries: 2.490 seconds
+	Number of clients running queries: 100
+	Average number of queries per client: 10
+
+
+
+
+mysqlslap -uroot -h 10.19.64.201 -P 30009 -peAjJXdDeHjy3 --auto-generate-sql-load-type=read --engine=innodb --auto-generate-sql-add-autoincrement -a --concurrency=50,100,1000 --number-of-queries 1000 --iterations=5
+
+
+
+938开头是mysql
