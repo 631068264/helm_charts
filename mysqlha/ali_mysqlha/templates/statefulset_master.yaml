@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ template "fullname" . }}-master
+  name: {{ template "mysqlha.fullname" . }}-master
   labels:
-    app: {{ template "fullname" . }}-master
+    app: {{ template "mysqlha.fullname" . }}-master
     chart: "{{ template "mysqlha.chart" . }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 spec:
-  serviceName: {{ template "fullname" . }}-master
+  serviceName: {{ template "mysqlha.fullname" . }}-master
   replicas: 1
   selector:
     matchLabels:
-      fullname: {{ template "fullname" . }}
-      app: {{ template "fullname" . }}-master
+      mysqlha.fullname: {{ template "mysqlha.fullname" . }}
+      app: {{ template "mysqlha.fullname" . }}-master
   template:
     metadata:
       labels:
-        fullname: {{ template "fullname" . }}
-        app: {{ template "fullname" . }}-master
+        mysqlha.fullname: {{ template "mysqlha.fullname" . }}
+        app: {{ template "mysqlha.fullname" . }}-master
       {{- if .Values.mysqlha.podAnnotations }}
       annotations:
 {{ toYaml .Values.mysqlha.podAnnotations | indent 8 }}
@@ -63,14 +63,14 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-root-password
         - name: MYSQL_REPLICATION_USER
           value: {{ .Values.mysqlha.mysqlReplicationUser }}
         - name: MYSQL_REPLICATION_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-replication-password
         {{ if .Values.mysqlha.mysqlUser }}
         - name: MYSQL_USER
@@ -78,7 +78,7 @@ spec:
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-password
         {{ end }}
         ports:
@@ -119,14 +119,14 @@ spec:
         - name: MYSQL_PWD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-root-password
         - name: MYSQL_REPLICATION_USER
           value: {{ .Values.mysqlha.mysqlReplicationUser }}
         - name: MYSQL_REPLICATION_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-replication-password
         ports:
         - name: xtrabackup
@@ -169,7 +169,7 @@ spec:
               mysql -h 127.0.0.1 --verbose<<EOF
               STOP SLAVE IO_THREAD;
               $(<change_master_to.sql.orig),
-              MASTER_HOST='{{ template "fullname" . }}-master-0.{{ template "fullname" . }}-master',
+              MASTER_HOST='{{ template "mysqlha.fullname" . }}-master-0.{{ template "mysqlha.fullname" . }}-master',
               MASTER_USER='${MYSQL_REPLICATION_USER}',
               MASTER_PASSWORD='${MYSQL_REPLICATION_PASSWORD}',
               MASTER_CONNECT_RETRY=10;
@@ -203,7 +203,7 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-root-password
         command: [ 'sh', '-c', 'DATA_SOURCE_NAME="root:$MYSQL_ROOT_PASSWORD@(localhost:3306)/" /bin/mysqld_exporter' ]
         {{- end }}
@@ -230,7 +230,7 @@ spec:
         emptyDir: {}
       - name: config-map
         configMap:
-          name: {{ template "fullname" . }}
+          name: {{ template "mysqlha.fullname" . }}
       - name: scripts
         emptyDir: {}
 {{- if .Values.persistence.enabled }}

@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: {{ template "fullname" . }}-salve
+  name: {{ template "mysqlha.fullname" . }}-salve
   labels:
-    app: {{ template "fullname" . }}-salve
+    app: {{ template "mysqlha.fullname" . }}-salve
     chart: "{{ template "mysqlha.chart" . }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 spec:
-  serviceName: {{ template "fullname" . }}-salve
+  serviceName: {{ template "mysqlha.fullname" . }}-salve
   replicas: {{ sub .Values.mysqlha.replicaCount 1 }}
   selector:
     matchLabels:
-      fullname: {{ template "fullname" . }}
-      app: {{ template "fullname" . }}-salve
+      mysqlha.fullname: {{ template "mysqlha.fullname" . }}
+      app: {{ template "mysqlha.fullname" . }}-salve
   template:
     metadata:
       labels:
-        fullname: {{ template "fullname" . }}
-        app: {{ template "fullname" . }}-salve
+        mysqlha.fullname: {{ template "mysqlha.fullname" . }}
+        app: {{ template "mysqlha.fullname" . }}-salve
       {{- if .Values.mysqlha.podAnnotations }}
       annotations:
 {{ toYaml .Values.mysqlha.podAnnotations | indent 8 }}
@@ -45,7 +45,7 @@ spec:
             [[ -d /var/lib/mysql/mysql ]] && rm -fr /var/lib/mysql/*
 
             # Clone data from previous peer.
-            ncat --recv-only {{ template "fullname" . }}-master-0.{{ template "fullname" . }}-master 3307 | xbstream -x -C /var/lib/mysql
+            ncat --recv-only {{ template "mysqlha.fullname" . }}-master-0.{{ template "mysqlha.fullname" . }}-master 3307 | xbstream -x -C /var/lib/mysql
             # Prepare the backup.
             xtrabackup --prepare --user=${MYSQL_REPLICATION_USER} --password=${MYSQL_REPLICATION_PASSWORD} --target-dir=/var/lib/mysql
         env:
@@ -54,7 +54,7 @@ spec:
         - name: MYSQL_REPLICATION_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-replication-password
         volumeMounts:
         - name: data
@@ -94,14 +94,14 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-root-password
         - name: MYSQL_REPLICATION_USER
           value: {{ .Values.mysqlha.mysqlReplicationUser }}
         - name: MYSQL_REPLICATION_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-replication-password
         {{ if .Values.mysqlha.mysqlUser }}
         - name: MYSQL_USER
@@ -109,7 +109,7 @@ spec:
         - name: MYSQL_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-password
         {{ end }}
         ports:
@@ -150,14 +150,14 @@ spec:
         - name: MYSQL_PWD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-root-password
         - name: MYSQL_REPLICATION_USER
           value: {{ .Values.mysqlha.mysqlReplicationUser }}
         - name: MYSQL_REPLICATION_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-replication-password
         ports:
         - name: xtrabackup
@@ -200,7 +200,7 @@ spec:
               mysql -h 127.0.0.1 --verbose<<EOF
               STOP SLAVE IO_THREAD;
               $(<change_master_to.sql.orig),
-              MASTER_HOST='{{ template "fullname" . }}-master-0.{{ template "fullname" . }}-master',
+              MASTER_HOST='{{ template "mysqlha.fullname" . }}-master-0.{{ template "mysqlha.fullname" . }}-master',
               MASTER_USER='${MYSQL_REPLICATION_USER}',
               MASTER_PASSWORD='${MYSQL_REPLICATION_PASSWORD}',
               MASTER_CONNECT_RETRY=10;
@@ -234,7 +234,7 @@ spec:
         - name: MYSQL_ROOT_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: {{ template "fullname" . }}
+              name: {{ template "mysqlha.fullname" . }}
               key: mysql-root-password
         command: [ 'sh', '-c', 'DATA_SOURCE_NAME="root:$MYSQL_ROOT_PASSWORD@(localhost:3306)/" /bin/mysqld_exporter' ]
         {{- end }}
@@ -261,7 +261,7 @@ spec:
         emptyDir: {}
       - name: config-map
         configMap:
-          name: {{ template "fullname" . }}
+          name: {{ template "mysqlha.fullname" . }}
       - name: scripts
         emptyDir: {}
 {{- if .Values.persistence.enabled }}

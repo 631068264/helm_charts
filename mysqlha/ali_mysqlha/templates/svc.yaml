@@ -2,29 +2,52 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "fullname" . }}-master
+  name: {{ template "mysqlha.fullname" . }}-headless
   labels:
-    app: {{ template "fullname" . }}
+    app: {{ template "mysqlha.fullname" . }}
+    chart: "{{ template "mysqlha.chart" . }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: {{ template "mysqlha.fullname" . }}
+      port: 3306
+  selector:
+    app: {{ template "mysqlha.fullname" . }}-master
+
+{{- if .Values.mysqlha.masterNodePort }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "mysqlha.fullname" . }}-master
+  labels:
+    app: {{ template "mysqlha.fullname" . }}
     chart: "{{ template "mysqlha.chart" . }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
 spec:
   type: NodePort
   ports:
-  - name: {{ template "fullname" . }}
+  - name: {{ template "mysqlha.fullname" . }}
     port: 3306
     nodePort: {{ .Values.mysqlha.masterNodePort }}
   selector:
-    app: {{ template "fullname" . }}-master
+    app: {{ template "mysqlha.fullname" . }}-master
+{{- end }}
+
+{{- if .Values.mysqlha.readonlyNodePort }}
 ---
 # Client service for connecting to any MySQL instance for reads.
 # For writes, you must instead connect to the master: mysql-0.mysql.
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "fullname" . }}-readonly
+  name: {{ template "mysqlha.fullname" . }}-readonly
   labels:
-    app: {{ template "fullname" . }}
+    app: {{ template "mysqlha.fullname" . }}
     chart: "{{ template "mysqlha.chart" . }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -35,7 +58,7 @@ metadata:
 spec:
   type: NodePort
   ports:
-  - name: {{ template "fullname" . }}
+  - name: {{ template "mysqlha.fullname" . }}
     port: 3306
     nodePort: {{ .Values.mysqlha.readonlyNodePort }}
   {{- if .Values.metrics.enabled }}
@@ -44,4 +67,5 @@ spec:
     targetPort: metrics
   {{- end }}
   selector:
-    app: {{ template "fullname" . }}-salve
+    app: {{ template "mysqlha.fullname" . }}-salve
+{{- end }}
